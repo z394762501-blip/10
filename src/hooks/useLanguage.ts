@@ -593,7 +593,13 @@ export function useLanguage() {
 export function useLanguageProvider() {
   const [language, setLanguageState] = useState<Language>(() => {
     const stored = localStorage.getItem('language');
-    return (stored as Language) || 'en';
+    if (stored) return stored as Language;
+
+    // Detect system language
+    const browserLang = navigator.language.toLowerCase();
+    const detectedLang = browserLang.startsWith('zh') ? 'zh' : 'en';
+    localStorage.setItem('language', detectedLang);
+    return detectedLang;
   });
 
   const setLanguage = (lang: Language) => {
