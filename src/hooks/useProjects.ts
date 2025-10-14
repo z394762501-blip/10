@@ -245,8 +245,128 @@ export function useProjects() {
     // 重新加载所有项目
     await loadProjects();
 
-    const newProject = projects.find(p => p.id === projectId);
-    if (!newProject) throw new Error('Failed to create project');
+    // 从数据库重新查询新创建的项目及其所有数据
+    const { data: projectData, error: fetchError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .maybeSingle();
+
+    if (fetchError || !projectData) throw new Error('Failed to fetch created project');
+
+    // 加载项目的所有相关数据
+    const { data: budgetData } = await supabase
+      .from('project_budgets')
+      .select('*')
+      .eq('project_id', projectId)
+      .maybeSingle();
+
+    const { data: phasesData } = await supabase
+      .from('project_phases')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('order_index');
+
+    const phases = await Promise.all(
+      (phasesData || []).map(async (phase) => {
+        const { data: attachments } = await supabase
+          .from('phase_attachments')
+          .select('*')
+          .eq('phase_id', phase.id);
+
+        const { data: reviewers } = await supabase
+          .from('phase_reviewers')
+          .select('*')
+          .eq('phase_id', phase.id);
+
+        return {
+          name: phase.name,
+          startDate: phase.start_date || undefined,
+          endDate: phase.end_date || undefined,
+          duration: phase.duration,
+          content: phase.content,
+          attachments: (attachments || []).map(a => ({
+            id: a.id,
+            name: a.name,
+            type: a.type,
+            size: a.size,
+            url: a.url,
+            uploadedAt: new Date(a.uploaded_at)
+          })),
+          reviewers: (reviewers || []).map(r => ({
+            id: r.id,
+            role: r.role,
+            status: r.status as 'pending' | 'approved' | 'rejected',
+            comment: r.comment,
+            reviewedAt: r.reviewed_at ? new Date(r.reviewed_at) : undefined
+          }))
+        };
+      })
+    );
+
+    const { data: risksData } = await supabase
+      .from('project_risks')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('order_index');
+
+    const { data: teamData } = await supabase
+      .from('project_team_members')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('order_index');
+
+    const { data: meetingsData } = await supabase
+      .from('project_meetings')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('order_index');
+
+    const { data: stakeholdersData } = await supabase
+      .from('project_stakeholders')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('order_index');
+
+    const newProject: Project = {
+      id: projectData.id,
+      name: projectData.name,
+      phases: phases as Phase[],
+      teamMembers: (teamData || []).map(t => ({
+        role: t.role,
+        responsibilities: t.responsibilities,
+        allocation: t.allocation
+      })),
+      budget: budgetData ? {
+        personnelCosts: budgetData.personnel_costs,
+        technologyTools: budgetData.technology_tools,
+        marketingLaunch: budgetData.marketing_launch,
+        contingency: budgetData.contingency
+      } : {
+        personnelCosts: 0,
+        technologyTools: 0,
+        marketingLaunch: 0,
+        contingency: 0
+      },
+      risks: (risksData || []).map(r => ({
+        id: r.id,
+        category: r.category,
+        description: r.description,
+        impact: r.impact as 'high' | 'medium' | 'low',
+        probability: r.probability as 'high' | 'medium' | 'low',
+        mitigation: r.mitigation
+      })),
+      communication: {
+        stakeholders: (stakeholdersData || []).map(s => s.name),
+        meetings: (meetingsData || []).map(m => ({
+          id: m.id,
+          title: m.title,
+          schedule: m.schedule,
+          audience: m.audience,
+          content: m.content
+        }))
+      }
+    };
 
     return newProject;
   };

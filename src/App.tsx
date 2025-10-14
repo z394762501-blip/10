@@ -42,6 +42,17 @@ function App() {
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showOverview, setShowOverview] = useState(false);
 
+  const handleCreateProject = async (name: string, createdBy: User) => {
+    try {
+      const newProject = await createProject(name, createdBy);
+      setSelectedProject(newProject);
+      setActiveTab('scope');
+    } catch (error) {
+      console.error('Failed to create project:', error);
+      alert('Failed to create project. Please try again.');
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -123,7 +134,7 @@ function App() {
             projects={projects}
             currentUser={user}
             onSelectProject={setSelectedProject}
-            onCreateProject={createProject}
+            onCreateProject={handleCreateProject}
             onDeleteProject={deleteProject}
             onShowUserManagement={isAdmin ? () => setShowUserManagement(true) : undefined}
             onShowOverview={() => setShowOverview(true)}
