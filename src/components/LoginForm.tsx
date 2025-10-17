@@ -4,21 +4,20 @@ import { useLanguage } from '../hooks/useLanguage';
 import LanguageSelector from './LanguageSelector';
 
 interface LoginFormProps {
-  onLogin: (username: string, password:string,role: string) => void;
+  onLogin: (username: string, password: string) => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
- 
-  const [role, setRole] = useState('product-manager-1');
-   const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('');
   const { t } = useLanguage();
+
   const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (username && password) {
-    onLogin(username, password, role); // ← 传递三个参数
-  }
-};
+    e.preventDefault();
+    if (username && password) {
+      onLogin(username, password);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -70,28 +69,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('login.role')}
-            </label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            >
-              <option value="product-manager-1">{t('product-manager-1')}</option>
-              <option value="product-manager-2">{t('product-manager-2')}</option>
-              <option value="product-manager-3">{t('product-manager-3')}</option>
-              <option value="designer">{t('designer')}</option>
-              <option value="operator-1">{t('operator-1')}</option>
-              <option value="operator-2">{t('operator-2')}</option>
-              <option value="operator-3">{t('operator-3')}</option>
-              <option value="sponsor">{t('sponsor')}</option>
-            </select>
-          </div>
-
-
-
           <button
             type="submit"
             className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors font-medium"
@@ -102,7 +79,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
 
         <div className="mt-6 text-center text-sm text-gray-500">
           <p>{t('login.demoCredentials')}</p>
-          <p className="mt-1">{t('login.selectRole')}</p>
         </div>
       </div>
       

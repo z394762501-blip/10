@@ -88,7 +88,7 @@ export function useAuth() {
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string, role: UserRole): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string, role?: UserRole): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
 
     await new Promise(resolve => setTimeout(resolve, 500));
@@ -104,8 +104,8 @@ export function useAuth() {
     const userData: User = {
       id: userId,
       ...mockUser.userData,
-      role: mockUser.userData.role === 'admin' ? 'admin' : role,
-      name: mockUser.userData.role === 'admin' ? mockUser.userData.name : `${mockUser.userData.name} (${role.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())})`,
+      role: mockUser.userData.role,
+      name: mockUser.userData.name,
       lastActive: new Date(),
     };
 
